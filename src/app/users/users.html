@@ -1,1 +1,181 @@
-<p>users works!</p>
+<app-navbar></app-navbar>
+
+<div class="users-page">
+  <div class="users-header">
+    <div>
+      <h1>Administración de Usuarios</h1>
+      <p>Gestiona usuarios del sistema, sus roles y estados de acceso</p>
+    </div>
+    <button type="button" class="btn-primary" (click)="openCreateModal()">
+      + Nuevo usuario
+    </button>
+  </div>
+
+  @if (errorMessage) {
+    <div class="alert alert-error">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (successMessage) {
+    <div class="alert alert-success">
+      {{ successMessage }}
+    </div>
+  }
+
+  <div class="table-container">
+    @if (isLoading) {
+      <div class="loading">Cargando usuarios...</div>
+    } @else if (users.length === 0) {
+      <div class="empty-state">No hay usuarios registrados en el sistema.</div>
+    } @else {
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Correo electrónico</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users; track user.id) {
+            <tr>
+              <td class="font-medium">{{ user.name }}</td>
+              <td class="text-muted">{{ user.email }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [class.badge-admin]="user.role === 'ADMIN'"
+                  [class.badge-user]="user.role === 'USER'"
+                >
+                  {{ user.role }}
+                </span>
+              </td>
+              <td>
+                <span
+                  class="badge"
+                  [class.badge-active]="user.active"
+                  [class.badge-inactive]="!user.active"
+                >
+                  {{ user.active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="text-right actions-cell">
+                <button
+                  type="button"
+                  class="btn-action btn-edit"
+                  (click)="openEditModal(user)"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  class="btn-action"
+                  [class.btn-deactivate]="user.active"
+                  [class.btn-activate]="!user.active"
+                  (click)="toggleStatus(user)"
+                >
+                  {{ user.active ? 'Desactivar' : 'Reactivar' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+@if (isModalOpen) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingUser ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
+        <button type="button" class="btn-close" (click)="closeModal()">✕</button>
+      </div>
+
+      @if (modalError) {
+        <div class="alert alert-error">
+          {{ modalError }}
+        </div>
+      }
+
+      <form [formGroup]="userForm" (ngSubmit)="saveUser()">
+        <div class="form-group">
+          <label for="userName">Nombre</label>
+          <input
+            id="userName"
+            type="text"
+            formControlName="name"
+            placeholder="Valentina Betancur"
+          />
+          @if (userForm.get('name')?.touched && userForm.get('name')?.invalid) {
+            <small class="field-error">El nombre es requerido (mínimo 2 caracteres).</small>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="userEmail">Correo electrónico</label>
+          <input
+            id="userEmail"
+            type="email"
+            formControlName="email"
+            placeholder="prueba@gmail.com"
+          />
+          @if (userForm.get('email')?.touched && userForm.get('email')?.invalid) {
+            <small class="field-error">Ingresa un correo electrónico válido.</small>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="userPassword">
+            Contraseña
+            @if (editingUser) {
+              <span class="label-hint">(Opcional si no se desea cambiar)</span>
+            }
+          </label>
+          <input
+            id="userPassword"
+            type="password"
+            formControlName="password"
+            placeholder="••••••••"
+          />
+          @if (userForm.get('password')?.touched && userForm.get('password')?.invalid) {
+            <small class="field-error">La contraseña debe tener al menos 6 caracteres.</small>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="userRole">Rol</label>
+          <select id="userRole" formControlName="role">
+            <option value="USER">USER</option>
+            <option value="ADMIN">ADMIN</option>
+          </select>
+          @if (userForm.get('role')?.touched && userForm.get('role')?.invalid) {
+            <small class="field-error">Selecciona un rol válido.</small>
+          }
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="closeModal()"
+            [disabled]="isSubmitting"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="userForm.invalid || isSubmitting"
+          >
+            {{ isSubmitting ? 'Guardando...' : (editingUser ? 'Actualizar' : 'Crear') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
