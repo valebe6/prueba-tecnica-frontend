@@ -1,0 +1,36 @@
+<app-navbar></app-navbar>
+
+<div class="board">
+  <div class="button-container">
+    <button class="new-note-button" type="button" (click)="createNote()">+ Nueva nota</button>
+  </div>
+  @for (note of notes; track note.id) {
+    <div
+      class="note"
+      cdkDrag
+      [cdkDragFreeDragPosition]="{
+        x: note.positionX,
+        y: note.positionY,
+      }"
+      (cdkDragEnded)="onDragEnd($event, note)"
+    >
+      <input [(ngModel)]="note.title" placeholder="Título" />
+
+      <textarea [(ngModel)]="note.text" placeholder="Escribe aquí..."></textarea>
+
+      <select [(ngModel)]="note.status">
+        @for (status of statuses; track status) {
+          <option [value]="status">
+            {{ status }}
+          </option>
+        }
+      </select>
+
+      <div class="note-actions">
+        <button type="button" (click)="saveNote(note)">Guardar</button>
+
+        <button type="button" (click)="deleteNote(note)">Eliminar</button>
+      </div>
+    </div>
+  }
+</div>
